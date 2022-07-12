@@ -38,10 +38,11 @@ namespace ParallalDownloadManager
 
 				while (!completed)
 				{
+					LogStatus();
 					await Task.Delay(TimeSpan.FromSeconds(1));
 					completed = CheckComplete();
 				}
-
+				LogStatus();
 				return SaveFile();
 			});
 
@@ -107,6 +108,26 @@ namespace ParallalDownloadManager
 
 			return path;
 		}
+
+		private void LogStatus()
+		{
+			var current = _head;
+			int index = 0;
+			while (current != null)
+			{
+				NotifyUpdate(index, current.Downloaded, current.TotalSize);
+				current = current.Next;
+				index++;
+			}
+		}
+
+		private void NotifyUpdate(int index, long downloaded, long totalSize)
+		{
+			double percentage = downloaded * 100 / (double)totalSize;
+			Console.SetCursorPosition(0, index);
+			Console.WriteLine($"thread-{index} {downloaded} of {totalSize} {percentage:0.##}%\t");
+		}
+
 		private DownloadChunk InitChunks(long length, int threads, string name)
 		{
 			var chuckSize = length / threads;

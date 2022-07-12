@@ -35,7 +35,6 @@
 		public void Close()
 		{
 			_filestream.Close();
-
 		}
 
 		public void Write(byte[] buffer, int offset, int bytesCount)

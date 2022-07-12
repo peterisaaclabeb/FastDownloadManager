@@ -9,6 +9,7 @@ namespace ParallalDownloadManager
 
 		public bool Downloading { get; private set; }
 		public bool Completed => _pointer > _to;
+		public long Downloaded => _pointer - _from;
 		public long TotalSize => _to - _from + 1;
 		public Stream DataStream => _dataStore.DataStream;
 
@@ -37,9 +38,9 @@ namespace ParallalDownloadManager
 			Downloading = true;
 			_cts = new CancellationTokenSource();
 			var token = _cts.Token;
-			_dataStore.Open();
 			try
 			{
+				_dataStore.Open();
 				var buffer = new byte[1024 * 16];
 				var stream = await downloadWorker.GetRangeAsync(_pointer, _to, token);
 
@@ -49,8 +50,6 @@ namespace ParallalDownloadManager
 					bytesRead = await stream.ReadAsync(buffer, token);
 					_dataStore.Write(buffer, 0, bytesRead);
 					_pointer += bytesRead;
-					NotifyUpdate(downloadWorker.Index);
-
 				} while (!token.IsCancellationRequested && stream.CanRead && bytesRead > 0);
 			}
 			catch (Exception ex)
@@ -67,17 +66,11 @@ namespace ParallalDownloadManager
 		{
 			_cts?.Cancel();
 			Downloading = false;
+			_dataStore.Close();
 
 			return Task.CompletedTask;
 		}
 
-		private void NotifyUpdate(int index)
-		{
-			long downloaded = _pointer - _from;
-			double percentage = downloaded * 100 / (double)TotalSize;
-			Console.SetCursorPosition(0, index);
-			Console.WriteLine($"thread-{index} {downloaded} of {TotalSize} {percentage:0.##}%\t");
-		}
 
 		public void Dispose()
 		{
