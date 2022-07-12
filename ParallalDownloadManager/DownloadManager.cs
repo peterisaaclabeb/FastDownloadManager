@@ -1,4 +1,4 @@
-﻿namespace FastDownloadManager
+﻿namespace ParallalDownloadManager
 {
 	internal class DownloadManager
 	{

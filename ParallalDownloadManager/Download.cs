@@ -1,8 +1,10 @@
-﻿namespace FastDownloadManager
+﻿using ParallalDownloadManager.Worker;
+
+namespace ParallalDownloadManager
 {
 	internal class Download
 	{
-		private readonly Queue<DownloadWorker> _workeres;
+		private readonly Queue<IDownloadWorker> _workeres;
 		private DownloadChunk _head;
 
 		public string Url { get; private set; }
@@ -12,7 +14,7 @@
 
 		public Download()
 		{
-			_workeres = new Queue<DownloadWorker>();
+			_workeres = new Queue<IDownloadWorker>();
 		}
 
 		public Download(string url, string name, long length, int threads = 4) : this()
@@ -23,7 +25,7 @@
 			_head = InitChunks(length, threads, name);
 			for (int i = 0; i < threads; i++)
 			{
-				_workeres.Enqueue(new DownloadWorker(Url, i));
+				_workeres.Enqueue(new HTTPDownloadWorker(Url, i));
 			}
 		}
 
@@ -67,7 +69,7 @@
 
 			while (_workeres.Any() && current != null)
 			{
-				if (current.Completed || current.Active)
+				if (current.Completed || current.Downloading)
 				{
 					current = current.Next;
 					continue;
